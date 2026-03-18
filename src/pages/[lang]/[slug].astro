@@ -1,0 +1,73 @@
+---
+import Layout from "@/layouts/main.astro";
+import fetchApi from "@/lib/strapi";
+import type { Tour } from "@/interface/tours";
+import { LANGS, DEFAULT_LANG, isValidLang, type Lang } from "@/lib/i18n";
+import TourHero from "@/components/tours/TourHero.astro";
+import TourBadges from "@/components/tours/TourBadges.astro";
+import TourTabs from "@/components/tours/TourTabs";
+
+export async function getStaticPaths() {
+  // 1. Fetch todos los tours en todos los idiomas
+  const allToursByLang: Record<string, Tour[]> = {};
+
+  for (const lang of LANGS) {
+    const tours = await fetchApi<Tour[]>({
+      endpoint: "tours",
+      wrappedByKey: "data",
+      locale: lang,
+    });
+    allToursByLang[lang] = tours && Array.isArray(tours) ? tours : [];
+  }
+
+  // 2. Construir mapa de slugs por documentId → { lang: slug }
+  const slugsByDocId: Record<string, Record<string, string>> = {};
+  for (const lang of LANGS) {
+    for (const tour of allToursByLang[lang]) {
+      if (!slugsByDocId[tour.documentId]) {
+        slugsByDocId[tour.documentId] = {};
+      }
+      slugsByDocId[tour.documentId][lang] = tour.slug;
+    }
+  }
+
+  // 3. Generar paths con el slugMap como prop
+  const paths: {
+    params: { lang: string; slug: string };
+    props: { tour: Tour; slugMap: Record<string, string> };
+  }[] = [];
+
+  for (const lang of LANGS) {
+    for (const tour of allToursByLang[lang]) {
+      paths.push({
+        params: { lang, slug: tour.slug },
+        props: {
+          tour,
+          slugMap: slugsByDocId[tour.documentId] ?? {},
+        },
+      });
+    }
+  }
+
+  return paths;
+}
+
+const { tour, slugMap } = Astro.props;
+const lang = isValidLang(Astro.params.lang) ? Astro.params.lang : DEFAULT_LANG;
+---
+
+<Layout>
+  {/* Inyectar mapa de slugs para el LanguageSwitcher */}
+  <script
+    id="tour-slug-map"
+    type="application/json"
+    set:html={JSON.stringify(slugMap)}
+  />
+
+  <div class="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-6 md:pt-8 pb-12">
+    <TourHero tour={tour} lang={lang} />
+    <TourBadges badges={tour.badge} lang={lang} />
+
+    <TourTabs tour={tour} client:visible />
+  </div>
+</Layout>

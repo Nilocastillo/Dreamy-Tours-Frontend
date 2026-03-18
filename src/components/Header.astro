@@ -1,0 +1,26 @@
+---
+import type { Global } from "@/interface/global";
+
+import TopBar from "@/components/TopBar.astro";
+import HeaderTop from "@/components/HeaderTop.astro";
+import Menu from "@/components/Menu.jsx";
+import type { Lang } from "@/lib/i18n";
+
+interface Props {
+  data: Global;
+  lang: Lang;
+}
+
+const { data, lang } = Astro.props;
+---
+
+<header class="w-full border-solid border-b border-border shadow-sm">
+  <TopBar data={data?.topBar} />
+  <HeaderTop data={data?.headerTop} lang={lang} />
+  <Menu
+    menu={data?.menu}
+    logo={data?.headerTop?.logo}
+    lang={lang}
+    client:load
+  />
+</header>

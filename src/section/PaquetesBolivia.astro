@@ -1,0 +1,81 @@
+---
+import type { boliviaPaquetes } from "@/interface/home";
+import type { Tour } from "@/interface/tours";
+import type { Lang } from "@/lib/i18n";
+import fetchApi from "@/lib/strapi";
+import TourCard from "@/components/ui/TourCard.astro";
+
+interface Props {
+  data?: boliviaPaquetes;
+  lang: Lang;
+}
+
+const { data, lang } = Astro.props;
+
+if (!data) return;
+
+const strapiUrl = import.meta.env.VITE_STRAPI_URL?.replace(/\/$/, "");
+
+// Fetch tours by category slug
+let tours: Tour[] = [];
+if (data.category?.slug) {
+  const response = await fetchApi<Tour[]>({
+    endpoint: "tours",
+    wrappedByKey: "data",
+    locale: lang,
+    query: {
+      "filters[categories][slug][$eq]": data.category.slug,
+      "pagination[limit]": String(data.limit || 3),
+      "populate[imagenDestacada]": "*",
+      "populate[badge][populate][icono]": "*",
+    },
+  });
+  tours = response && Array.isArray(response) ? response : [];
+}
+
+if (tours.length === 0) return;
+---
+
+<section class="w-full py-20 md:py-28 bg-primary/5">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="mb-14 md:mb-20 text-center">
+      <h2
+        class="text-4xl md:text-5xl lg:text-6xl font-medium text-gray-900 mb-6 relative inline-block"
+      >
+        <span class="relative z-10">{data.titulo}</span>
+        <span
+          class="absolute bottom-0 left-1/2 -translate-x-1/2 w-24 h-3 bg-secondary/30 -z-0 rounded-full blur-sm"
+        ></span>
+      </h2>
+      <div class="flex items-center justify-center gap-3 mt-4">
+        <div
+          class="h-[1px] w-16 bg-gradient-to-r from-transparent to-secondary"
+        >
+        </div>
+        <div class="w-12 h-1.5 bg-secondary rounded-full relative">
+          <div
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full"
+          >
+          </div>
+        </div>
+        <div
+          class="h-[1px] w-16 bg-gradient-to-l from-transparent to-secondary"
+        >
+        </div>
+      </div>
+      {
+        data.description && (
+          <p class="mt-6 text-gray-600 max-w-2xl mx-auto">{data.description}</p>
+        )
+      }
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
+      {
+        tours.map((tour) => {
+          return <TourCard tour={tour} lang={lang} />;
+        })
+      }
+    </div>
+  </div>
+</section>

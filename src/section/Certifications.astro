@@ -1,0 +1,107 @@
+---
+import type { Premio } from "@/interface/home";
+import type { Lang } from "@/lib/i18n";
+
+interface Props {
+  data?: Premio[];
+  lang: Lang;
+}
+
+const { data } = Astro.props;
+
+const premios: Premio[] = Array.isArray(data) ? data : [];
+
+if (premios.length === 0) return;
+
+const strapiUrl = import.meta.env.VITE_STRAPI_URL?.replace(/\/$/, "");
+
+// duplicamos el array para loop infinito
+const sliderData = [...premios, ...premios];
+---
+
+<section class="slider-container mx-auto max-w-7xl px-6 py-16">
+  <div class="slider-track w-full">
+    {
+      sliderData.map((cert) => {
+        const imageUrl = cert.logo?.url ? `${strapiUrl}${cert.logo.url}` : null;
+
+        return (
+          <div class="slide" title={cert.description}>
+            {imageUrl && (
+              <img src={imageUrl} alt={cert.description} loading="lazy" />
+            )}
+          </div>
+        );
+      })
+    }
+  </div>
+</section>
+
+<style>
+  .slider-container {
+    overflow: hidden;
+    position: relative;
+    /* Efecto de desenfoque a los bordes con mask-image */
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 15%,
+      black 85%,
+      transparent
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 15%,
+      black 85%,
+      transparent
+    );
+  }
+
+  .slider-track {
+    display: flex;
+    align-items: center;
+    gap: 6rem; /* Espacio entre logos */
+    width: 100%;
+    /* Animación CSS infinita */
+    animation: scroll 25s linear infinite;
+  }
+
+  .slider-container:hover .slider-track {
+    animation-play-state: paused;
+  }
+
+  .slide {
+    flex-shrink: 0;
+    min-width: 120px;
+    max-width: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .slide img {
+    max-width: 100%;
+    max-height: 120px; /* Alto máximo para los logos */
+    object-fit: contain;
+    /* Opcional: logos en grisáceo que se colorean al pasar el mouse */
+    filter: grayscale(100%);
+    opacity: 0.7;
+    transition: all 0.3s ease;
+  }
+
+  .slide img:hover {
+    filter: grayscale(0%);
+    opacity: 1;
+  }
+
+  @keyframes scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      /* Se traslada la mitad exacta de todo el ancho + la mitad del gap para un loop perfecto */
+      transform: translateX(calc(-50% - 1.5rem));
+    }
+  }
+</style>

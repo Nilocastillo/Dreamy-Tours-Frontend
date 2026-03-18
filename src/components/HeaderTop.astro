@@ -1,0 +1,88 @@
+---
+import type { HeaderTop as HeaderTopType } from "@/interface/global";
+import Button from "@/components/ui/button.astro";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import type { Lang } from "@/lib/i18n";
+
+interface Props {
+  data?: HeaderTopType;
+  lang: Lang;
+}
+
+const { data, lang } = Astro.props;
+if (!data) return;
+
+// Función helper para links / botones
+const getLinkProps = (
+  link: (typeof data.headerLink)[number] | (typeof data.button)[number],
+) => {
+  const isExternal = link.isExternal;
+  return {
+    target: isExternal ? "_blank" : "_self",
+    rel: isExternal ? "noopener noreferrer" : undefined,
+  };
+};
+---
+
+<div class="hidden lg:block w-full bg-background text-foreground pb-4">
+  <!-- Bloque superior: links a la izquierda, logo a la derecha -->
+  <div class="flex max-w-7xl justify-between items-center mx-auto px-4">
+    <!-- Logo -->
+    <div class="group">
+      <a
+        href={data.logo.url}
+        target={data.logo.isExternal ? "_blank" : "_self"}
+        rel={data.logo.isExternal ? "noopener noreferrer" : undefined}
+      >
+        {
+          data.logo.imagen && (
+            <img
+              src={`http://localhost:1337${data.logo.imagen.url}`}
+              alt={data.logo.imagen.alternativeText ?? data.logo.label}
+              class="h-16 w-auto group-hover:scale-105 duration-300 transition-transform"
+            />
+          )
+        }
+      </a>
+    </div>
+    <div class="flex flex-col items-end">
+      <!-- Links a la izquierda -->
+      <nav
+        class="hidden lg:flex flex-wrap justify-center p-4 divide-x-1 divide-neutral-400"
+      >
+        {
+          data.headerLink.map((link) => {
+            const { target, rel } = getLinkProps(link);
+            return (
+              <a
+                href={link.url}
+                target={target}
+                rel={rel}
+                class="px-4 text-muted-foreground hover:text-primary transition-colors duration-200 cursor-pointer"
+              >
+                {link.label}
+              </a>
+            );
+          })
+        }
+      </nav>
+      <div
+        class="mt-2 flex flex-wrap gap-2 justify-center items-center md:justify-start"
+      >
+        <div class="hidden lg:flex gap-2">
+          {
+            data.button.map((btn) => (
+              <Button
+                label={btn.label}
+                href={btn.url}
+                type={btn.type}
+                isExternal={btn.isExternal}
+              />
+            ))
+          }
+        </div>
+        <LanguageSwitcher currentLang={lang} client:load />
+      </div>
+    </div>
+  </div>
+</div>

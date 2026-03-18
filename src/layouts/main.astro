@@ -1,0 +1,40 @@
+---
+import "../styles/global.css";
+import "@fontsource-variable/outfit";
+
+import fetchApi from "@/lib/strapi";
+import type { Global } from "@/interface/global";
+import { LANGS, DEFAULT_LANG, isValidLang } from "@/lib/i18n";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+
+// 1. Detectamos el idioma desde los params de la vista de forma automática
+const currentLang = isValidLang(Astro.params.lang)
+	? Astro.params.lang
+	: DEFAULT_LANG;
+
+// 2. Obtenemos toda la data de la barra superior/footer y se la inyectamos
+const globalData = await fetchApi<Global>({
+	endpoint: "global",
+	wrappedByKey: "data",
+	query: {
+		locale: currentLang,
+		populate: "deep", // Puedes poner este nivel de profundidad aquí
+	},
+});
+---
+
+<html lang={currentLang}>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+	</head>
+	<body>
+		<Header data={globalData} lang={currentLang} />
+		<main>
+			<slot />
+		</main>
+		<Footer lang={currentLang} />
+	</body>
+</html>

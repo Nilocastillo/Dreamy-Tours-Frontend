@@ -1,0 +1,66 @@
+---
+import type { About } from "@/interface/home";
+import type { Lang } from "@/lib/i18n";
+
+interface Props {
+  data?: About;
+  lang: Lang;
+}
+
+const { data } = Astro.props;
+if (!data) return;
+
+const strapiUrl = import.meta.env.VITE_STRAPI_URL?.replace(/\/$/, "");
+const imagenUrl = data.imagen?.url ? `${strapiUrl}${data.imagen.url}` : null;
+---
+
+<section class="relative w-full overflow-hidden">
+  <div class="relative z-10 max-w-7xl mx-auto px-6 py-16 md:py-20 lg:py-28">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <!-- Texto -->
+      <div class="w-full lg:max-w-xl mx-auto">
+        <h2
+          class="text-[clamp(1.75rem,4vw,2.75rem)] font-medium leading-tight mb-2 text-[#181311] dark:text-white text-center"
+        >
+          {data.titulo}
+        </h2>
+
+        <!-- Elemento Decorativo (Basado en la imagen proporcionada) -->
+        <div class="flex items-center gap-4 mb-8 opacity-60">
+          <div
+            class="h-[1px] flex-1 bg-linear-to-r from-transparent via-[#4a5d4e] to-[#4a5d4e]"
+          >
+          </div>
+          <div
+            class="w-2.5 h-2.5 rounded-full bg-[#4a5d4e] ring-4 ring-[#4a5d4e]/10"
+          >
+          </div>
+          <div
+            class="h-[1px] flex-1 bg-linear-to-l from-transparent via-[#4a5d4e] to-[#4a5d4e]"
+          >
+          </div>
+        </div>
+
+        <p
+          class="text-base md:text-lg leading-relaxed text-[#181311]/70 dark:text-white/70"
+        >
+          {data.content}
+        </p>
+      </div>
+
+      <!-- Media -->
+      {
+        data.imagen && (
+          <div class="relative w-full aspect-[16/10] rounded-3xl overflow-hidden shadow-2xl shadow-primary/10 border border-primary/10 group">
+            <img
+              src={imagenUrl}
+              alt={data.imagen.alternativeText}
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              loading="lazy"
+            />
+          </div>
+        )
+      }
+    </div>
+  </div>
+</section>

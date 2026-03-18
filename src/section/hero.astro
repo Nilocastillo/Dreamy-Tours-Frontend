@@ -1,0 +1,139 @@
+---
+import Button from "@/components/ui/button.astro";
+import type { Hero } from "@/interface/home";
+import type { Lang } from "@/lib/i18n";
+
+interface Props {
+  data?: Hero;
+  lang: Lang;
+}
+
+const { data } = Astro.props;
+if (!data) return;
+
+const strapiUrl = import.meta.env.VITE_STRAPI_URL?.replace(/\/$/, "");
+const videoUrl = data.backgroundVideo?.url
+  ? `${strapiUrl}${data.backgroundVideo.url}`
+  : null;
+const badgeIconUrl = data.badgeIcon?.url
+  ? `${strapiUrl}${data.badgeIcon.url}`
+  : null;
+---
+
+<section
+  class="hero-section relative w-full min-h-[80vh] flex items-end overflow-hidden"
+>
+  {/* ──── Video de fondo ──── */}
+  {
+    videoUrl && (
+      <video
+        class="absolute inset-0 w-full h-full object-cover"
+        src={videoUrl}
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="auto"
+      />
+    )
+  }
+
+  {/* ──── Overlay oscuro + gradiente inferior ──── */}
+  <div class="absolute inset-0 bg-black/40"></div>
+  <div
+    class="absolute inset-0 bg-linear-to-t from-black/70 via-transparent to-transparent"
+  >
+  </div>
+
+  {/* ──── Contenido ──── */}
+  <div
+    class="relative z-10 w-full max-w-7xl mx-auto px-6 pb-16 md:pb-20 lg:pb-24"
+  >
+    {/* Badge */}
+    {
+      data.badgeText && (
+        <div class="hero-badge inline-flex items-center gap-2 bg-white/15 backdrop-blur-md border border-white/20 rounded-full px-4 py-1.5 mb-6">
+          {badgeIconUrl && (
+            <img
+              src={badgeIconUrl}
+              alt={
+                data.badgeIcon?.alternativeText ??
+                "iconos de seguridad del badge"
+              }
+              class="w-4 h-4"
+            />
+          )}
+          <span class="text-xs font-semibold tracking-widest uppercase text-white">
+            {data.badgeText}
+          </span>
+        </div>
+      )
+    }
+
+    <h1
+      class="hero-title font-bold text-white leading-[1.05] tracking-tight mb-5"
+    >
+      {data.titulo}
+    </h1>
+
+    {
+      data.contenido && (
+        <p class="hero-subtitle text-white/80 max-w-lg mb-8 leading-relaxed">
+          {data.contenido}
+        </p>
+      )
+    }
+
+    {
+      data.button && data.button.length > 0 && (
+        <div class="flex flex-wrap gap-3">
+          {data.button.map((btn) => (
+            <Button
+              label={btn.label}
+              href={btn.url}
+              type={btn.type}
+              isExternal={btn.isExternal}
+            />
+          ))}
+        </div>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .hero-title {
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+  }
+  .hero-subtitle {
+    font-size: clamp(0.95rem, 1.5vw, 1.15rem);
+  }
+
+  /* Animaciones de entrada */
+  .hero-badge,
+  .hero-title,
+  .hero-subtitle,
+  .hero-btn {
+    animation: hero-fade-up 0.8s ease-out both;
+  }
+  .hero-title {
+    animation-delay: 0.15s;
+  }
+  .hero-subtitle {
+    animation-delay: 0.3s;
+  }
+  .hero-btn {
+    animation-delay: 0.45s;
+  }
+
+  @keyframes hero-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
